@@ -1,9 +1,9 @@
 import { baseRepository } from './baseRepository';
 import { User } from '../models/user';
-import db from '../config/db';  
+import db from '../config/db';
 
 export const userRepository = {
-  ...baseRepository,
+  ...baseRepository<User>('users'),
 
   async findUserByEmail(email: string): Promise<User | null> {
     const query = `SELECT * FROM users WHERE email = $1`;

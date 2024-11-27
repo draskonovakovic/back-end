@@ -1,13 +1,8 @@
 import { userRepository } from '../repositories/userRepository';
 import { User } from '../models/user';
+import { createError } from '../utilis/createError';
 import bcrypt from 'bcrypt'
-
-const SALT_ROUNDS = 10;
-
-const createError = (message: string, statusCode: number) => ({
-    message,
-    statusCode
-});
+import { config } from '../config/config';
   
 export const userService = {
     async createUser(user: Omit<User, 'id'>): Promise<User> {
@@ -15,15 +10,15 @@ export const userService = {
       if (existingUser) {
         throw createError('User with this email already exists', 409);
       }
-  
-      const hashedPassword = await bcrypt.hash(user.password, SALT_ROUNDS);
+
+      const hashedPassword = await bcrypt.hash(user.password, config.bcrypt.saltRounds);
+
       const newUser = { ...user, password: hashedPassword } as User;
-  
-      return userRepository.create('users', newUser);
+      return userRepository.create(newUser);
     },
   
     async getUserById(id: number): Promise<User> {
-      const user = await userRepository.findById('users', id) as User;
+      const user = await userRepository.findById(id) as User;
       if (!user) {
         throw createError('User not found', 404);
       }
@@ -31,11 +26,11 @@ export const userService = {
     },
   
     async getAllUsers(): Promise<User[]> {
-      return userRepository.findAll('users');
+      return userRepository.findAll();
     },
   
     async updateUser(id: number, user: Partial<User>): Promise<User> {
-      const updatedUser = await userRepository.update('users', id, user);
+      const updatedUser = await userRepository.update(id, user);
       if (!updatedUser) {
         throw createError('User not found', 404);
       }
@@ -43,7 +38,7 @@ export const userService = {
     },
   
     async deleteUser(id: number): Promise<void> {
-      const deleted = await userRepository.delete('users', id);
+      const deleted = await userRepository.delete(id);
       if (!deleted) {
         throw createError('User not found', 404);
       }

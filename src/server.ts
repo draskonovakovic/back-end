@@ -1,11 +1,7 @@
-import dotenv from 'dotenv';
 import http from 'http';  
 import app from './app';
 import { Server as SocketIOServer } from 'socket.io';  
-
-dotenv.config();
-
-const PORT = process.env.PORT || 3000;
+import { config } from './config/config'; 
 
 const server = http.createServer(app);
 
@@ -24,6 +20,6 @@ io.on('connection', (socket) => {
   });
 });
 
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+server.listen(config.server.port, () => {
+  console.log(`Server running on port ${config.server.port}`);
 });
