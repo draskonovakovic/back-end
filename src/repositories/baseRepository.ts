@@ -33,7 +33,7 @@ export const baseRepository = <T extends TModel>(table: string) => ({
     async delete(id: number): Promise<boolean> {
       const query = `DELETE FROM ${table} WHERE id = $1 RETURNING id`;
       const result = await db.query(query, [id]);
-      return result.rowCount! > 0;
+      return result.rows.length > 0;
     },
   
     async findAll(): Promise<T[]> {

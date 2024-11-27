@@ -8,17 +8,17 @@ export const userService = {
     async createUser(user: Omit<User, 'id'>): Promise<User> {
       const existingUser = await userRepository.findUserByEmail(user.email);
       if (existingUser) {
-        throw createError('User with this email already exists', 409);
+        throw createError('User with this email already exists', 400);
       }
 
       const hashedPassword = await bcrypt.hash(user.password, config.bcrypt.saltRounds);
 
-      const newUser = { ...user, password: hashedPassword } as User;
+      const newUser = { ...user, password: hashedPassword };
       return userRepository.create(newUser);
     },
   
     async getUserById(id: number): Promise<User> {
-      const user = await userRepository.findById(id) as User;
+      const user = await userRepository.findById(id);
       if (!user) {
         throw createError('User not found', 404);
       }
