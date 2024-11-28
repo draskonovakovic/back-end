@@ -6,7 +6,14 @@ import { jwtUtils } from './utilis/jwtUtilis';
 
 const server = http.createServer(app);
 
-const io = new SocketIOServer(server);
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: 'http://localhost:3000', 
+    methods: ['GET', 'POST'],        
+    credentials: true,               
+  },
+});
+
 
 io.use((socket, next) => {
   const token = socket.handshake.headers.cookie
