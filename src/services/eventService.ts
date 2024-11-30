@@ -3,8 +3,18 @@ import { Event } from '../models/event';
 import { eventRepository } from '../repositories/eventRepository';
   
 export const eventService = {
-    async createEvent(event: Omit<Event, 'id'>): Promise<Event> {
-      return eventRepository.create(event);
+    async createEvent(event: Omit<Event, 'id' | 'creator_id'>, creatorId: number): Promise<Event> {
+      try {
+        console.log(event)
+          const eventWithCreator = {
+              ...event,
+              creator_id: creatorId,
+          };
+          console.log(eventWithCreator)
+          return await eventRepository.create(eventWithCreator);
+      } catch (error: any) {
+          throw new Error('Failed to create event: ' + error.message);
+      }
     },
   
     async getEventById(id: number): Promise<Event> {

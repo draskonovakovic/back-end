@@ -3,9 +3,17 @@ import { wrapAsync } from '../utilis/wrapAsync.';
 import { eventService } from '../services/eventService';
 
 export const eventController = {
-    createEvent: wrapAsync(async (req: Request, res: Response) => {
-        const event = await eventService.createEvent(req.body);
-        res.status(201).json({ success: true, message: 'Event created successfully', data: event });
+    createEvent: wrapAsync(async (req: Request , res: Response) => {
+        try {
+            const creatorId = req.user?.id; 
+            console.log(req.user?.id)
+            if (!creatorId) throw new Error('User ID not found in request');
+    
+            const event = await eventService.createEvent(req.body, creatorId);
+            res.status(201).json({ success: true, message: 'Event created successfully', data: event });
+        } catch (error: any) {
+            res.status(500).json({ success: false, message: error.message });
+        }
     }),
 
     getEventById: wrapAsync(async (req: Request, res: Response) => {

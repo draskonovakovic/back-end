@@ -4,4 +4,5 @@ export type Event = {
     description: string,
     date_time: Date,
     location: string;
+    creator_id: number;
 }

@@ -1,3 +1,5 @@
+/// <reference path="./utilis/types.d.ts" />
+
 import express from 'express'
 import userRoutes from './routes/userRoutes'
 import authRoutes from './routes/authRoutes'
