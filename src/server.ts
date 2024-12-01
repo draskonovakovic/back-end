@@ -6,7 +6,7 @@ import { jwtUtils } from './utilis/jwtUtilis';
 
 const server = http.createServer(app);
 
-const io = new SocketIOServer(server, {
+export const io = new SocketIOServer(server, {
   cors: {
     origin: 'http://localhost:3000', 
     methods: ['GET', 'POST'],        
@@ -16,18 +16,20 @@ const io = new SocketIOServer(server, {
 
 
 io.use((socket, next) => {
-  const token = socket.handshake.headers.cookie
-    ?.split('; ')
-    .find((row) => row.startsWith('auth_token='))
-    ?.split('=')[1];
+  const authHeader = socket.handshake.headers.authorization; // Pristupi Authorization zaglavlju
+  const token = authHeader?.split(' ')[1]; // Ekstraktuj token (format: "Bearer <token>")
 
-  if (!token) return next(new Error('Authentication error'));
+  if (!token) {
+    console.error('No token provided');
+    return next(new Error('Authentication error'));
+  }
 
   try {
-    const user = jwtUtils.verifyToken(token);
-    socket.data.user = user;
+    const user = jwtUtils.verifyToken(token); // Proveri validnost tokena
+    socket.data.user = user; // Sačuvaj korisnika u socket instanci
     next();
-  } catch (error) {
+  } catch (error: any) {
+    console.error('Token verification failed:', error.message);
     next(new Error('Authentication error'));
   }
 });
