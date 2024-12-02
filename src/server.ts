@@ -16,8 +16,8 @@ export const io = new SocketIOServer(server, {
 
 
 io.use((socket, next) => {
-  const authHeader = socket.handshake.headers.authorization; // Pristupi Authorization zaglavlju
-  const token = authHeader?.split(' ')[1]; // Ekstraktuj token (format: "Bearer <token>")
+  const authHeader = socket.handshake.headers.authorization; 
+  const token = authHeader?.split(' ')[1]; 
 
   if (!token) {
     console.error('No token provided');
@@ -25,8 +25,8 @@ io.use((socket, next) => {
   }
 
   try {
-    const user = jwtUtils.verifyToken(token); // Proveri validnost tokena
-    socket.data.user = user; // Sačuvaj korisnika u socket instanci
+    const user = jwtUtils.verifyToken(token); 
+    socket.data.user = user; 
     next();
   } catch (error: any) {
     console.error('Token verification failed:', error.message);

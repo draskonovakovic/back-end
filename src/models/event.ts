@@ -3,6 +3,7 @@ export type Event = {
     title: string,
     description: string,
     date_time: Date,
-    location: string;
+    location: string,
+    type: string,
     creator_id: number;
 }
