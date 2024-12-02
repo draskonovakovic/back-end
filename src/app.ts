@@ -1,5 +1,9 @@
+/// <reference path="./utilis/types.d.ts" />
+
 import express from 'express'
 import userRoutes from './routes/userRoutes'
+import authRoutes from './routes/authRoutes'
+import eventRoutes from './routes/eventRoutes'
 import { errorMiddleware } from './middleware/errorMiddleware';
 import cors from 'cors';
 
@@ -15,6 +19,8 @@ app.use(cors({
 app.use(express.json());
 
 app.use('/api/users', userRoutes);
+app.use('/api/events', eventRoutes);
+app.use('/api/auth', authRoutes)
 
 app.use(errorMiddleware);
 
