@@ -10,6 +10,14 @@ export const userRepository = {
     try{
       const query = `SELECT * FROM users WHERE email = $1`;
       const result = await db.query(query, [email]);
+
+      if (!result) {
+        throw createError(
+          `Failed to find record by email ${email} in table "users". The database query returned no result.`,
+          404
+        );
+      }
+
       return result.rows[0] || null;
     } catch(error: any){
       throw createError(`Error finding record by ID in table "users": ${error}`, error.statusCode);

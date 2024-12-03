@@ -73,12 +73,14 @@ export const userService = {
     }
   },
 
-  async deleteUser(id: number): Promise<void> {
+  async deleteUser(id: number): Promise<number> {
     try {
-      const deleted = await userRepository.delete(id);
-      if (!deleted) {
+      const deletedUserId = await userRepository.delete(id);
+      if (!deletedUserId) {
         throw createError('User not found', 404);
       }
+
+      return deletedUserId;
     } catch (error: any) {
       console.error('Error deleting user:', error);
       throw createError(`Failed to delete user: ${error}`, error.statusCode || 500);

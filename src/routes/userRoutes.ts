@@ -4,10 +4,13 @@ import { userValidationMiddleware } from '../middleware/validationMiddleware';
 
 const router = Router();
 
-router.post('/',userValidationMiddleware, userController.createUser);
-router.get('/', userController.getAllUsers);
-router.get('/:id', userController.getUserById);
-router.put('/:id',userValidationMiddleware, userController.updateUser);
-router.delete('/:id', userController.deleteUser);
+router.route('/')
+  .post(userValidationMiddleware, userController.createUser)
+  .get(userController.getAllUsers);
+
+router.route('/:id')
+  .get(userController.getUserById)
+  .put(userValidationMiddleware, userController.updateUser)
+  .delete(userController.deleteUser);
 
 export default router;

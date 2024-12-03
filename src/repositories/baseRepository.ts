@@ -15,9 +15,16 @@ export const baseRepository = <T extends TModel>(table: string) => ({
       const query = `INSERT INTO ${table} (${fields}) VALUES (${placeholders}) RETURNING *`;
       const result = await db.query(query, values);
 
+      if (!result || !result.rows[0]) {
+        throw createError(
+          `Failed to create record in table "${table}". The database query did not return a valid result.`,
+          500
+        );
+      }
+
       return result.rows[0];
     } catch (error: any) {
-      throw createError(`Error creating record in table "${table}": ${error}`, error.statusCode);
+      throw createError(`Error creating record in table "${table}": ${error.message}`, 500);
     }
   },
 
@@ -26,9 +33,16 @@ export const baseRepository = <T extends TModel>(table: string) => ({
       const query = `SELECT * FROM ${table} WHERE id = $1`;
       const result = await db.query(query, [id]);
 
+      if (!result) {
+        throw createError(
+          `Failed to find record by ID ${id} in table "${table}". The database query returned no result.`,
+          404
+        );
+      }
+
       return result.rows[0] || null;
     } catch (error: any) {
-      throw createError(`Error finding record by ID in table "${table}": ${error}`, error.statusCode);
+      throw createError(`Error finding record by ID in table "${table}": ${error.message}`, 500);
     }
   },
 
@@ -39,20 +53,35 @@ export const baseRepository = <T extends TModel>(table: string) => ({
       const query = `UPDATE ${table} SET ${fields} WHERE id = $${values.length + 1} RETURNING *`;
 
       const result = await db.query(query, [...values, id]);
-      return result.rows[0] || null;
+
+      if (!result || !result.rows[0]) {
+        throw createError(
+          `Failed to update record with ID ${id} in table "${table}". The database query did not return a valid result.`,
+          500
+        );
+      }
+
+      return result.rows[0];
     } catch (error: any) {
-      throw createError(`Error updating record in table "${table}": ${error}`, error.statusCode);
+      throw createError(`Error updating record in table "${table}": ${error.message}`, 500);
     }
   },
 
-  async delete(id: number): Promise<boolean> {
+  async delete(id: number): Promise<number> {
     try {
       const query = `DELETE FROM ${table} WHERE id = $1 RETURNING id`;
       const result = await db.query(query, [id]);
 
-      return result.rows.length > 0;
+      if (!result || result.rows.length === 0) {
+        throw createError(
+          `Failed to delete record with ID ${id} in table "${table}". The record may not exist.`,
+          404
+        );
+      }
+
+      return id;
     } catch (error: any) {
-      throw createError(`Error deleting record in table "${table}": ${error}`, error.statusCode);
+      throw createError(`Error deleting record in table "${table}": ${error.message}`, 500);
     }
   },
 
@@ -61,9 +90,16 @@ export const baseRepository = <T extends TModel>(table: string) => ({
       const query = `SELECT * FROM ${table}`;
       const result = await db.query(query);
 
+      if (!result || !result.rows) {
+        throw createError(
+          `Failed to retrieve records from table "${table}". The database query did not return a valid result.`,
+          500
+        );
+      }
+
       return result.rows;
     } catch (error: any) {
-      throw createError(`Error retrieving all records from table "${table}": ${error}`, error.statusCode);
+      throw createError(`Error retrieving all records from table "${table}": ${error.message}`, 500);
     }
   },
 });

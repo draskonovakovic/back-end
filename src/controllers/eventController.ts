@@ -5,22 +5,25 @@ import { io } from '../server';
 
 export const eventController = {
     createEvent: wrapAsync(async (req: Request , res: Response) => {
-        try {
-            const creatorId = req.user?.id; 
-            if (!creatorId) throw new Error('User ID not found in request');
-    
-            const event = await eventService.createEvent(req.body, creatorId);
-            io.emit('newEvent', event);
-            res.status(201).json({ success: true, message: 'Event created successfully', data: event });
-        } catch (error: any) {
-            res.status(500).json({ success: false, message: error.message });
-        }
+        const creatorId = req.user?.id; 
+        if (!creatorId) throw new Error('User ID not found in request');
+
+        const event = await eventService.createEvent(req.body, creatorId);
+        io.emit('newEvent', event);
+        res.status(201).json({ success: true, message: 'Event created successfully', data: event });
     }),
 
     getEventById: wrapAsync(async (req: Request, res: Response) => {
-        const event = await eventService.getEventById(Number(req.params.id));
+        const eventId = Number(req.params.id);
+    
+        if (!eventId || isNaN(eventId)) {
+            return res.status(400).json({ success: false, message: 'Invalid event ID' });
+        }
+    
+        const event = await eventService.getEventById(eventId);
         res.status(200).json({ success: true, data: event });
     }),
+    
 
     getAllEvents: wrapAsync(async (req: Request, res: Response) => {
         const events = await eventService.getAllEvents();
@@ -28,12 +31,25 @@ export const eventController = {
     }),
 
     updateEvent: wrapAsync(async (req: Request, res: Response) => {
-        const event = await eventService.updateEvent(Number(req.params.id), req.body);
+        const eventId = Number(req.params.id);
+    
+        if (!eventId || isNaN(eventId)) {
+            return res.status(400).json({ success: false, message: 'Invalid event ID' });
+        }
+    
+        const event = await eventService.updateEvent(eventId, req.body);
         res.status(200).json({ success: true, data: event });
     }),
-
+    
     deleteEvent: wrapAsync(async (req: Request, res: Response) => {
-        await eventService.deleteEvent(Number(req.params.id));
+        const eventId = Number(req.params.id);
+    
+        if (!eventId || isNaN(eventId)) {
+            return res.status(400).json({ success: false, message: 'Invalid event ID' });
+        }
+    
+        await eventService.deleteEvent(eventId);
         res.status(204).send();
     }),
+    
 };

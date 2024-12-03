@@ -13,7 +13,7 @@ export const authService = {
       const user = await userRepository.findUserByEmail(email);
 
       if (!user) {
-        throw createError('Invalid credentials', 401);
+        throw createError('User not found', 404);
       }
 
       const isPasswordValid = await bcrypt.compare(password, user.password);

@@ -6,7 +6,13 @@ export const eventService = {
   async createEvent(event: Omit<Event, 'id' | 'creator_id'>, creatorId: number): Promise<Event> {
     try {
       const eventWithCreator = { ...event, creator_id: creatorId };
-      return await eventRepository.create(eventWithCreator);
+      const createdEvent = await eventRepository.create(eventWithCreator);
+        
+      if (!createdEvent) {
+          throw createError('Failed to create event, repository returned null or undefined', 500);
+      }
+      
+      return createdEvent;
     } catch (error: any) {
       console.error('Error creating event:', error);
       if (error.code === '23505') {
@@ -37,7 +43,11 @@ export const eventService = {
 
   async getAllEvents(): Promise<Event[]> {
     try {
-      return await eventRepository.findAll();
+      const events =  await eventRepository.findAll()
+      if (!events){
+        throw createError('Failed to fetch events, repository returned null or undefined', 500);
+      }
+      return events;
     } catch (error: any) {
       console.error('Error fetching all events:', error);
       throw createError(`Failed to retrieve events: ${error}`, error.statusCode || 500);
@@ -60,12 +70,15 @@ export const eventService = {
     }
   },
 
-  async deleteEvent(id: number): Promise<void> {
+  async deleteEvent(id: number): Promise<number> {
     try {
-      const deleted = await eventRepository.delete(id);
-      if (!deleted) {
+      const deletedEventId = await eventRepository.delete(id);
+      
+      if (!deletedEventId) {
         throw createError('Event not found', 404);
       }
+
+      return deletedEventId;
     } catch (error: any) {
       console.error('Error deleting event:', error);
       throw createError(`Failed to delete event: ${error}`, error.statusCode || 500);
