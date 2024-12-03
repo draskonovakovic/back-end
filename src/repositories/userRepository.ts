@@ -20,7 +20,8 @@ export const userRepository = {
 
       return result.rows[0] || null;
     } catch(error: any){
-      throw createError(`Error finding record by ID in table "users": ${error}`, error.statusCode);
+      const errorMessage = error?.message || 'Unknown error occurred while retrieving the record';
+      throw createError(`Error finding record by email in table "users": ${errorMessage}`, 500);
     }
   }
 };

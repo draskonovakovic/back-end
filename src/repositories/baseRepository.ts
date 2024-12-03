@@ -24,7 +24,8 @@ export const baseRepository = <T extends TModel>(table: string) => ({
 
       return result.rows[0];
     } catch (error: any) {
-      throw createError(`Error creating record in table "${table}": ${error.message}`, 500);
+      const errorMessage = error?.message || 'Unknown error occurred while creating the record';
+      throw createError(`Error creating record in table "${table}": ${errorMessage}`, 500);
     }
   },
 
@@ -33,7 +34,7 @@ export const baseRepository = <T extends TModel>(table: string) => ({
       const query = `SELECT * FROM ${table} WHERE id = $1`;
       const result = await db.query(query, [id]);
 
-      if (!result) {
+      if (!result || result.rows.length === 0) {
         throw createError(
           `Failed to find record by ID ${id} in table "${table}". The database query returned no result.`,
           404
@@ -42,7 +43,8 @@ export const baseRepository = <T extends TModel>(table: string) => ({
 
       return result.rows[0] || null;
     } catch (error: any) {
-      throw createError(`Error finding record by ID in table "${table}": ${error.message}`, 500);
+      const errorMessage = error?.message || 'Unknown error occurred while retrieving the record';
+      throw createError(`Error finding record by ID in table "${table}": ${errorMessage}`, 500);
     }
   },
 
@@ -63,7 +65,8 @@ export const baseRepository = <T extends TModel>(table: string) => ({
 
       return result.rows[0];
     } catch (error: any) {
-      throw createError(`Error updating record in table "${table}": ${error.message}`, 500);
+      const errorMessage = error?.message || 'Unknown error occurred while updating the record';
+      throw createError(`Error updating record in table "${table}": ${errorMessage}`, 500);
     }
   },
 
@@ -81,7 +84,8 @@ export const baseRepository = <T extends TModel>(table: string) => ({
 
       return id;
     } catch (error: any) {
-      throw createError(`Error deleting record in table "${table}": ${error.message}`, 500);
+      const errorMessage = error?.message || 'Unknown error occurred while deleting the record';
+      throw createError(`Error deleting record in table "${table}": ${errorMessage}`, 500);
     }
   },
 
@@ -99,7 +103,8 @@ export const baseRepository = <T extends TModel>(table: string) => ({
 
       return result.rows;
     } catch (error: any) {
-      throw createError(`Error retrieving all records from table "${table}": ${error.message}`, 500);
+      const errorMessage = error?.message || 'Unknown error occurred while retrieving records';
+      throw createError(`Error retrieving all records from table "${table}": ${errorMessage}`, 500);
     }
   },
 });

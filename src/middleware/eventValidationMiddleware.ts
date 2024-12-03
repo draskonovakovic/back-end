@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { VALID_EVENT_TYPES } from '../config/eventTypes';  
 
 export const eventValidationMiddleware = (req: Request, res: Response, next: NextFunction) => {
   const { title, description, date_time, location, type } = req.body;
@@ -23,10 +24,9 @@ export const eventValidationMiddleware = (req: Request, res: Response, next: Nex
     return res.status(400).json({ message: 'Location must be a string and at least 3 characters long' });
   }
 
-  const validEventTypes = ['Meeting', 'Workshop', 'Conference', 'Webinar', 'Social Event'];
-  if (!type || !validEventTypes.includes(type)) {
+  if (!type || !VALID_EVENT_TYPES.includes(type)) {
     return res.status(400).json({
-      message: `Type must be one of the following: ${validEventTypes.join(', ')}`,
+      message: `Type must be one of the following: ${VALID_EVENT_TYPES.join(', ')}`,
     });
   }
 
