@@ -82,7 +82,7 @@ export const baseRepository = <T extends TModel>(table: string) => ({
         );
       }
 
-      return result.oid;
+      return id;
     } catch (error: any) {
       const errorMessage = error?.message || 'Unknown error occurred while deleting the record';
       throw createError(`Error deleting record in table "${table}": ${errorMessage}`, 500);
