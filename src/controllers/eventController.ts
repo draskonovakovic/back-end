@@ -59,7 +59,7 @@ export const eventController = {
             return res.status(400).json({ success: false, message: 'Invalid event ID' });
         }
     
-        await eventService.cancelEvent(eventId);
-        res.status(200).json({ message: `Event with ID ${eventId} has been successfully cancelled` });
+        const canceledEventId = await eventService.cancelEvent(eventId);
+        res.status(200).json({ success: true, data: canceledEventId });
     }),
 };
