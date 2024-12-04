@@ -27,7 +27,7 @@ export const eventRepository = {
           );
         }
 
-        if (checkResult.rows[0].active === false) {
+        if (!checkResult.rows[0].active) {
           throw createError(
             `Failed to cancel event with ID ${id}. The record is already canceled.`,
             400
