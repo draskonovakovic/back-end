@@ -5,5 +5,6 @@ export type Event = {
     date_time: Date,
     location: string,
     type: string,
-    creator_id: number;
+    creator_id: number,
+    active: boolean;
 }

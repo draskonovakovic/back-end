@@ -52,4 +52,14 @@ export const eventController = {
         res.status(204).send();
     }),
     
+    cancelEvent: wrapAsync(async(req: Request, res: Response) => {
+        const eventId = Number(req.params.id);
+    
+        if (!eventId || isNaN(eventId)) {
+            return res.status(400).json({ success: false, message: 'Invalid event ID' });
+        }
+    
+        await eventService.cancelEvent(eventId);
+        res.status(200).json({ message: `Event with ID ${eventId} has been successfully cancelled` });
+    }),
 };

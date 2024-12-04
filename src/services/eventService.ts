@@ -84,4 +84,19 @@ export const eventService = {
       throw createError(`Failed to delete event: ${error}`, error.statusCode || 500);
     }
   },
+
+  async cancelEvent(id: number): Promise<number> {
+    try {
+      const canceledEventId = eventRepository.cancelEvent(id);
+
+      if (!canceledEventId) {
+        throw createError('Event not found', 404);
+      }
+
+      return canceledEventId;
+    } catch (error: any) {
+      console.error('Error canceling event:', error)
+      throw createError(`Failed to cancel event with ID ${id}: ${error}`,error.statusCode || 500);
+    }
+  },
 };
