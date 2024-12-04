@@ -14,4 +14,6 @@ router.route('/:id')
   .put(eventValidationMiddleware, eventController.updateEvent)
   .delete(eventController.deleteEvent);
 
+router.route('/cancel/:id').put(eventController.cancelEvent)
+
 export default router;
