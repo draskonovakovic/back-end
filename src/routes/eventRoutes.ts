@@ -9,6 +9,8 @@ router.route('/')
   .post(eventValidationMiddleware, authenticateToken, eventController.createEvent)
   .get(eventController.getAllEvents);
 
+router.route('/filter').get(eventController.getFilteredEvents)
+
 router.route('/:id')
   .get(eventController.getEventById)
   .put(eventValidationMiddleware, eventController.updateEvent)

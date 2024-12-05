@@ -1,6 +1,7 @@
 import { createError } from '../utilis/createError';
 import { Event } from '../models/event';
 import { eventRepository } from '../repositories/eventRepository';
+import { VALID_EVENT_TYPES } from '../config/eventTypes';
 
 export const eventService = {
   async createEvent(event: Omit<Event, 'id' | 'creator_id'>, creatorId: number): Promise<Event> {
@@ -24,7 +25,7 @@ export const eventService = {
       if (error.code === '23503') {
         throw createError('Invalid foreign key reference in event data', 400);
       }
-      throw createError(`Failed to create event: ${error}`, 500);
+      throw createError(`Failed to create event: ${error.message}`, error.statusCode || 500);
     }
   },
 
@@ -37,7 +38,7 @@ export const eventService = {
       return event;
     } catch (error: any) {
       console.error('Error fetching event by ID:', error);
-      throw createError(`Failed to retrieve event: ${error}`, error.statusCode || 500);
+      throw createError(`Failed to retrieve event: ${error.message}`, error.statusCode || 500);
     }
   },
 
@@ -50,7 +51,7 @@ export const eventService = {
       return events;
     } catch (error: any) {
       console.error('Error fetching all events:', error);
-      throw createError(`Failed to retrieve events: ${error}`, error.statusCode || 500);
+      throw createError(`Failed to retrieve events: ${error.message}`, error.statusCode || 500);
     }
   },
 
@@ -66,7 +67,7 @@ export const eventService = {
       if (error.code === '23503') {
         throw createError('Invalid foreign key reference in event data', 400);
       }
-      throw createError(`Failed to update event: ${error}`, error.statusCode || 500);
+      throw createError(`Failed to update event: ${error.message}`, error.statusCode || 500);
     }
   },
 
@@ -81,7 +82,7 @@ export const eventService = {
       return deletedEventId;
     } catch (error: any) {
       console.error('Error deleting event:', error);
-      throw createError(`Failed to delete event: ${error}`, error.statusCode || 500);
+      throw createError(`Failed to delete event: ${error.message}`, error.statusCode || 500);
     }
   },
 
@@ -96,7 +97,39 @@ export const eventService = {
       return canceledEventId;
     } catch (error: any) {
       console.error('Error canceling event:', error)
-      throw createError(`Failed to cancel event with ID ${id}: ${error}`,error.statusCode || 500);
+      throw createError(`Failed to cancel event with ID ${id}: ${error.message}`,error.statusCode || 500);
     }
   },
+
+  async getFilteredEvents(filters: {
+    date?: string;
+    type?: string;
+    location?: string;
+    search?: string;
+  }): Promise<Event[]> {
+    try {
+      if (filters.date && isNaN(Date.parse(filters.date))) {
+        throw createError('Invalid date format provided in filters', 400);
+      }
+
+      if (filters.type && !VALID_EVENT_TYPES.includes(filters.type)) {
+        throw createError(
+          `Invalid event type provided. Valid types are: ${VALID_EVENT_TYPES.join(', ')}`,
+          400
+        );
+      }
+  
+      const events = await eventRepository.getFilteredEvents(filters);
+  
+      if (!events || events.length === 0) {
+        throw createError('No events found matching the provided filters', 404);
+      }
+  
+      return events;
+    } catch (error: any) {
+      console.error('Error fetching filtered events:', error);
+      throw createError(`Error filtering events: ${error.message}`,error.statusCode || 500);
+    }
+  }
+  
 };
