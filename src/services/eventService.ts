@@ -104,7 +104,7 @@ export const eventService = {
   async getFilteredEvents(filters: {
     date?: string;
     type?: string;
-    location?: string;
+    active?: string;
     search?: string;
   }): Promise<Event[]> {
     try {
@@ -115,6 +115,13 @@ export const eventService = {
       if (filters.type && !VALID_EVENT_TYPES.includes(filters.type)) {
         throw createError(
           `Invalid event type provided. Valid types are: ${VALID_EVENT_TYPES.join(', ')}`,
+          400
+        );
+      }
+
+      if (filters.active && filters.active !== 'true' && filters.active !== 'false' ) {
+        throw createError(
+          `Invalid value for 'active' provided. Only 'true' or 'false' are allowed.`,
           400
         );
       }

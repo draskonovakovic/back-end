@@ -12,7 +12,6 @@ export function authenticateToken(req: express.Request, res: express.Response, n
   try {
     const decodedToken = jwt.verify(token, SECRET_KEY) as { id: number }; 
     req.user = decodedToken; 
-    console.log(decodedToken)
     next();
   } catch (err) {
     console.error('Token verification failed:', err);
