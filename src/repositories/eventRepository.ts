@@ -54,7 +54,7 @@ export const eventRepository = {
     active?: string;
     search?: string;
   }): Promise<Event[]> {
-  try {
+    try {
       const { date, type, active, search } = filters;
   
       if (date && isNaN(Date.parse(date))) {
@@ -68,39 +68,38 @@ export const eventRepository = {
         );
       }
   
-      if (active && active !== 'true' && active !== 'false') {
-        throw createError(
-          `Invalid value for 'active' provided. Only 'true' or 'false' are allowed.`,
-          400
-        );
-      }
-  
       let query = `
         SELECT id, title, description, date_time, location, creator_id, type, active
         FROM events
       `;
-      const params: any[] = [];
+      const params: (string | boolean)[] = [];
+      const conditions: string[] = []; 
   
       if (date) {
-        query += ` WHERE DATE(date_time) = $${params.length + 1}`;
+        conditions.push(`DATE(date_time) = $${params.length + 1}`);
         params.push(date);
       }
   
       if (type) {
-        query += params.length > 0 ? ` AND type = $${params.length + 1}` : ` WHERE type = $${params.length + 1}`;
+        conditions.push(`type = $${params.length + 1}`);
         params.push(type);
       }
   
       if (active) {
-        query += params.length > 0 ? ` AND active = $${params.length + 1}` : ` WHERE active = $${params.length + 1}`;
-        params.push(active === 'true'); 
+        conditions.push(`active = CASE 
+            WHEN $${params.length + 1} IN ('true', 'false') THEN $${params.length + 1}::BOOLEAN
+            ELSE NULL
+          END`);
+        params.push(active);
       }
   
       if (search) {
-        query += params.length > 0
-          ? ` AND (title ILIKE $${params.length + 1} OR description ILIKE $${params.length + 1} OR location ILIKE $${params.length + 1})`
-          : ` WHERE (title ILIKE $${params.length + 1} OR description ILIKE $${params.length + 1} OR location ILIKE $${params.length + 1})`;
+        conditions.push(`(title ILIKE $${params.length + 1} OR description ILIKE $${params.length + 1} OR location ILIKE $${params.length + 1})`);
         params.push(`%${search}%`);
+      }
+  
+      if (conditions.length > 0) {
+        query += ` WHERE ${conditions.join(' AND ')}`;
       }
   
       query += ` ORDER BY date_time DESC`;
@@ -128,6 +127,5 @@ export const eventRepository = {
       );
     }
   }
-  
     
 };
