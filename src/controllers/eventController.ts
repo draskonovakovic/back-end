@@ -62,4 +62,23 @@ export const eventController = {
         const canceledEventId = await eventService.cancelEvent(eventId);
         res.status(200).json({ success: true, data: canceledEventId });
     }),
+
+    getFilteredEvents: wrapAsync(async (req: Request, res: Response) => {
+        const { date, type, active, search } = req.query;
+      
+        if (date && isNaN(Date.parse(date as string))) {
+          return res.status(400).json({ success: false, message: 'Invalid date format' });
+        }
+      
+        const filters = {
+          date: date as string | undefined,
+          type: type as string | undefined,
+          active: active as string | undefined,
+          search: search as string | undefined,
+        };
+      
+        const events = await eventService.getFilteredEvents(filters);
+        res.status(200).json({ success: true, data: events });
+    }),
+      
 };

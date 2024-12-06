@@ -7,12 +7,14 @@ const router = Router();
 
 router.route('/')
   .post(eventValidationMiddleware, authenticateToken, eventController.createEvent)
-  .get(eventController.getAllEvents);
+  .get(authenticateToken, eventController.getAllEvents);
+
+router.route('/filter').get(eventController.getFilteredEvents)
 
 router.route('/:id')
-  .get(eventController.getEventById)
-  .put(eventValidationMiddleware, eventController.updateEvent)
-  .delete(eventController.deleteEvent);
+  .get(authenticateToken, eventController.getEventById)
+  .put(eventValidationMiddleware, authenticateToken, eventController.updateEvent)
+  .delete(authenticateToken, eventController.deleteEvent);
 
 router.route('/cancel/:id').put(eventController.cancelEvent)
 
