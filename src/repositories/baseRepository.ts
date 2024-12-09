@@ -1,5 +1,11 @@
 import db from '../config/db';
 import { createError } from '../utilis/createError';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 type TModel = {
   id: number;
@@ -33,15 +39,20 @@ export const baseRepository = <T extends TModel>(table: string) => ({
     try {
       const query = `SELECT * FROM ${table} WHERE id = $1`;
       const result = await db.query(query, [id]);
-
+  
       if (!result || result.rows.length === 0) {
         throw createError(
           `Failed to find record by ID ${id} in table "${table}". The database query returned no result.`,
           404
         );
       }
-
-      return result.rows[0] || null;
+  
+      const row = result.rows[0];
+      if (row.date_time) {
+        row.date_time = dayjs.utc(row.date_time).tz('Europe/Belgrade').format(); // ili neka druga vremenska zona
+      }
+  
+      return row || null;
     } catch (error: any) {
       const errorMessage = error?.message || 'Unknown error occurred while retrieving the record';
       throw createError(`Error finding record by ID in table "${table}": ${errorMessage}`, 500);
