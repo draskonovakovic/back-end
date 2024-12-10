@@ -4,6 +4,7 @@ import express from 'express'
 import userRoutes from './routes/userRoutes'
 import authRoutes from './routes/authRoutes'
 import eventRoutes from './routes/eventRoutes'
+import invitationRoutes from './routes/invitationRoutes'
 import { errorMiddleware } from './middleware/errorMiddleware';
 import cors from 'cors';
 
@@ -20,6 +21,7 @@ app.use(express.json());
 
 app.use('/api/users', userRoutes);
 app.use('/api/events', eventRoutes);
+app.use('/api/invitations', invitationRoutes)
 app.use('/api/auth', authRoutes)
 
 app.use(errorMiddleware);
