@@ -137,6 +137,24 @@ export const eventService = {
       console.error('Error fetching filtered events:', error);
       throw createError(`Error filtering events: ${error.message}`,error.statusCode || 500);
     }
-  }
+  },
+
+  async isUsersEvent(creatorId: number, eventId: number): Promise<boolean> {
+    try {
+      const event = await eventRepository.findById(eventId);
   
+      if (!event) {
+        throw createError(`Event with ID ${eventId} not found.`, 404);
+      }
+  
+      return creatorId === event.creator_id;
+    } catch (error: any) {
+      console.error('Error checking if this is user\'s event:', error);
+  
+      throw createError(
+        `Error checking if this is user's event: ${error.message}`,
+        error.statusCode || 500
+      );
+    }
+  }
 };
