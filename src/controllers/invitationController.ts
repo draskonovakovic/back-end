@@ -4,7 +4,9 @@ import { invitationService } from '../services/invitationService';
 
 export const invitationController = {
     createInvitation: wrapAsync(async (req: Request , res: Response) => {
-        const invitation = await invitationService.createInvitation(req.body);
+        if(!req.user?.id) throw new Error('User ID not found in request');
+
+        const invitation = await invitationService.createInvitation(req.body, req.user?.id);
         res.status(201).json({ success: true, message: 'Invitation created successfully', data: invitation });
     }),
 
@@ -49,14 +51,18 @@ export const invitationController = {
 
     acceptInvitation: wrapAsync(async (req: Request, res: Response) => {
         const invitationId = Number(req.params.id);
+        const loggedInUserId =  Number(req.params.userId);
     
         if (!invitationId || isNaN(invitationId)) {
           return res.status(400).json({ success: false, message: 'Invalid invitation ID' });
         }
     
         const invitation = await invitationService.acceptInvitation(invitationId);
-        res.status(200).json({ success: true, message: 'Invitation accepted', data: invitation });
-    }),
+
+        (loggedInUserId != invitation.user_id) 
+          ? res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}?invitationAccepted=true`)
+          : res.redirect(`${process.env.CLIENT_URL}/event-details/${invitation.event_id}?invitationAccepted=true`)
+    }),    
     
     declineInvitation: wrapAsync(async (req: Request, res: Response) => {
         const invitationId = Number(req.params.id);

@@ -13,7 +13,7 @@ router.route('/:id')
   .put(authenticateToken, invitationController.updateInvitation)
   .delete(authenticateToken, invitationController.deleteInvitation);
 
-router.get('/:id/accept', invitationController.acceptInvitation);
-router.get('/:id/decline', invitationController.declineInvitation);
+router.get('/:id/:userId/accept', invitationController.acceptInvitation);
+router.get('/:id/:userId/decline', invitationController.declineInvitation);
 
 export default router;

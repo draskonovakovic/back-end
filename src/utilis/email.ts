@@ -1,12 +1,12 @@
 import nodemailer from 'nodemailer';
 
 const transporter = nodemailer.createTransport({
-    host: 'smtp.ethereal.email',
-    port: 587,
-    auth: {
-        user: 'louie0@ethereal.email',
-        pass: 'hE3HHkpneWP6kU7XzB'
-    }
+  host: 'smtp.ethereal.email',
+  port: 587,
+  auth: {
+      user: 'marta.kutch@ethereal.email',
+      pass: '8GS8cAeKehVCAaHyet'
+  }
 });
 
 export const sendEmail = async (
@@ -24,8 +24,6 @@ export const sendEmail = async (
       html,
     });
 
-    console.log('Message sent: %s', info.messageId);
-    console.log("Mejl je poslat:", to)
     console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
   } catch (error) {
     console.error('Error sending email:', error);

@@ -6,7 +6,7 @@ import { createError } from '../utilis/createError';
 import { emailService } from './emailService';
 
 export const invitationService = {
-  async createInvitation(invitation: Omit<Invitation, 'id'>): Promise<Invitation> {
+  async createInvitation(invitation: Omit<Invitation, 'id'>, loggedInUserId: number): Promise<Invitation> {
     try {
       const createdInvitation = await invitationRepository.create(invitation)
       if(!createdInvitation) throw createError('Failed to create invitation, repository returned null or undefined', 500);
@@ -18,7 +18,7 @@ export const invitationService = {
         throw new Error('Event or user not found.');
       }
 
-      await emailService.sendInvitationEmail(user.email, event.title, createdInvitation.id);
+      await emailService.sendInvitationEmail(user.email, event, createdInvitation.id, loggedInUserId);
       return createdInvitation;
     } catch (error: any) {
       console.error('Error creating invite:', error);
