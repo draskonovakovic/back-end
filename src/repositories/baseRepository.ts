@@ -21,7 +21,7 @@ export const baseRepository = <T extends TModel>(table: string) => ({
       const query = `INSERT INTO ${table} (${fields}) VALUES (${placeholders}) RETURNING *`;
       const result = await db.query(query, values);
 
-      if (!result || !result.rows[0]) {
+      if (!result || !result.rows || !result.rows[0]) {
         throw createError(
           `Failed to create record in table "${table}". The database query did not return a valid result.`,
           500
@@ -40,7 +40,7 @@ export const baseRepository = <T extends TModel>(table: string) => ({
       const query = `SELECT * FROM ${table} WHERE id = $1`;
       const result = await db.query(query, [id]);
   
-      if (!result || result.rows.length === 0) {
+      if (!result || !result.rows || result.rows.length === 0) {
         throw createError(
           `Failed to find record by ID ${id} in table "${table}". The database query returned no result.`,
           404
@@ -67,7 +67,7 @@ export const baseRepository = <T extends TModel>(table: string) => ({
 
       const result = await db.query(query, [...values, id]);
 
-      if (!result || !result.rows[0]) {
+      if (!result || !result.rows || !result.rows[0]) {
         throw createError(
           `Failed to update record with ID ${id} in table "${table}". The database query did not return a valid result.`,
           500
@@ -86,7 +86,7 @@ export const baseRepository = <T extends TModel>(table: string) => ({
       const query = `DELETE FROM ${table} WHERE id = $1 RETURNING id`;
       const result = await db.query(query, [id]);
 
-      if (!result || result.rows.length === 0) {
+      if (!result || !result.rows || result.rows.length === 0) {
         throw createError(
           `Failed to delete record with ID ${id} in table "${table}". The record may not exist.`,
           404

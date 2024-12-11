@@ -68,12 +68,12 @@ export const eventRepository = {
         );
       }
   
-      let query = `
+      const baseQuery = `
         SELECT id, title, description, date_time, location, creator_id, type, active
         FROM events
       `;
+      const conditions: string[] = [];
       const params: (string | boolean)[] = [];
-      const conditions: string[] = []; 
   
       if (date) {
         conditions.push(`DATE(date_time) = $${params.length + 1}`);
@@ -94,17 +94,17 @@ export const eventRepository = {
       }
   
       if (search) {
-        conditions.push(`(title ILIKE $${params.length + 1} OR description ILIKE $${params.length + 1} OR location ILIKE $${params.length + 1})`);
+        conditions.push(
+          `(title ILIKE $${params.length + 1} OR description ILIKE $${params.length + 1} OR location ILIKE $${params.length + 1})`
+        );
         params.push(`%${search}%`);
       }
   
-      if (conditions.length > 0) {
-        query += ` WHERE ${conditions.join(' AND ')}`;
-      }
+      const whereClause = conditions.length > 0 ? ` WHERE ${conditions.join(' AND ')}` : '';
+      const orderClause = ` ORDER BY date_time DESC`;
+      const finalQuery = `${baseQuery}${whereClause}${orderClause}`;
   
-      query += ` ORDER BY date_time DESC`;
-  
-      const result = await db.query(query, params);
+      const result = await db.query(finalQuery, params);
   
       if (!result) {
         throw createError('Query execution failed. No result returned.', 500);
@@ -127,5 +127,4 @@ export const eventRepository = {
       );
     }
   }
-    
 };

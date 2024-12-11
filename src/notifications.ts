@@ -1,4 +1,3 @@
-import cron from 'node-cron';
 import db from './config/db';
 import { createError } from './utilis/createError';
 
@@ -83,20 +82,13 @@ export const handleEventNotifications = (io: any) => {
             );
           }
         } catch (error: any) {
-          throw createError('Error processing event:', error.statusCode || 500);
+          console.error('Error processing event:', error.message);
         }
       }
     } catch (error: any) {
-      throw createError('Failed to send notifications.', error.statusCode || 500);
+      console.error('Failed to send notifications.', error.message);
     }
   };
 
-  cron.schedule('*/1 * * * *', async () => {
-    console.log('Checking for upcoming event notifications...');
-    try {
-      await sendNotifications();
-    } catch (error: any) {
-      throw createError('Cron job error:', error.statusCode || 500);
-    }
-  });
+  return sendNotifications; 
 };
