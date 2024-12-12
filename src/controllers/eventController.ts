@@ -24,7 +24,6 @@ export const eventController = {
         res.status(200).json({ success: true, data: event });
     }),
     
-
     getAllEvents: wrapAsync(async (req: Request, res: Response) => {
         const events = await eventService.getAllEvents();
         res.status(200).json({ success: true, data: events });
@@ -94,5 +93,14 @@ export const eventController = {
 
         const flag = await eventService.isUsersEvent(creatorId, eventId)
         res.status(200).json({ success: true, data: flag});
+    }),
+
+    getEventStatistic: wrapAsync(async (req: Request, res: Response) => {
+        const userId = req.user?.id; 
+
+        if (!userId) throw new Error('User ID not found in request');
+
+        const eventsWithStats = await eventService.getEventsWithStatistic(userId);
+        res.status(200).json({ success: true, data: eventsWithStats});
     })
 };

@@ -18,5 +18,6 @@ router.route('/:id')
 
 router.route('/cancel/:id').put(authenticateToken, eventController.cancelEvent)
 router.route('/check/:id').get(authenticateToken, eventController.isUsersEvent)
+router.get("/dashboard/attendance", authenticateToken, eventController.getEventStatistic);
 
 export default router;

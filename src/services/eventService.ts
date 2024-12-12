@@ -1,7 +1,9 @@
 import { createError } from '../utilis/createError';
 import { Event } from '../models/event';
 import { eventRepository } from '../repositories/eventRepository';
+import { invitationRepository } from '../repositories/invitationRepository';
 import { VALID_EVENT_TYPES } from '../config/eventTypes';
+import { EventStats } from '../models/eventStats';
 
 export const eventService = {
   async createEvent(event: Omit<Event, 'id' | 'creator_id'>, creatorId: number): Promise<Event> {
@@ -156,5 +158,37 @@ export const eventService = {
         error.statusCode || 500
       );
     }
-  }
+  },
+
+  async getEventsWithStatistic(userId: number): Promise<EventStats[]> {
+    try {
+      const events = await eventRepository.findEventsByCreatorId(userId);
+
+      if (!Array.isArray(events)) {
+        throw new Error('Expected an array of events, but got a different data type.');
+      }
+
+      const eventsWithStats: EventStats[] = [];
+
+      for (const event of events) {
+        if (!event || typeof event.id !== 'number') {
+          throw new Error('Invalid event object encountered.');
+        }
+
+        const stats = await invitationRepository.getInvitationStatsByEventId(event.id);
+
+        eventsWithStats.push({
+          event,
+          aceptedInvitationsNum: stats?.acceptedcount || 0,
+          declinedInvitationsNum: stats?.declinedcount || 0,
+          pendingInvitationsNum: stats?.pendingcount || 0,
+        });
+      }
+
+      return eventsWithStats;
+    } catch (error) {
+      console.error('Error in getEventsWithStatistic:', error);
+      throw new Error('Failed to fetch events with statistics.');
+    }
+  },
 };
