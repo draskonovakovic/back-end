@@ -1,13 +1,9 @@
 import { sendEmail } from '../utilis/email';
-import { Event } from '../models/event';
 
-const API_URL = process.env.API_URL || 'http://localhost:5000';
-
-export class emailService {
-  static async sendInvitationEmail(to: string, event: Event, token: string) {
-    const acceptLink = `${API_URL}/api/invitations/accept?token=${token}`;
-    const declineLink = `${API_URL}/api/invitations/decline?token=${token}`;
-
+export const emailService = {
+  async sendInvitationEmail(to: string, event: any, token: string): Promise<void> {
+    const acceptLink = `${process.env.API_URL}/api/invitations/accept?token=${token}`;
+    const declineLink = `${process.env.API_URL}/api/invitations/decline?token=${token}`;
     const subject = `You're Invited: ${event.title}`;
     const text = `You have been invited to "${event.title}". Click the link to accept: ${acceptLink} or decline: ${declineLink}`;
     const html = `
@@ -18,13 +14,19 @@ export class emailService {
       </p>
       <p>We hope to see you there!</p>
     `;
+    await sendEmail(to, subject, text, html);
+  },
 
-    try {
-        await sendEmail(to, subject, text, html);
-        console.log(`Invitation email successfully sent to ${to} for event: ${event.title}`);
-    } catch (error) {
-        console.error('Error sending invitation email:', error);
-        throw new Error('Failed to send invitation email. Please try again later.');
-    }
-  }
-}
+  async sendPasswordResetEmail(to: string, resetLink: string): Promise<void> {
+    const subject = 'Password Reset Request';
+    const text = `You have requested to reset your password. Click the link below to reset it:\n\n${resetLink}`;
+    const html = `
+      <p>You have requested to reset your password.</p>
+      <p>
+        <a href="${resetLink}">Reset Password</a>
+      </p>
+      <p>If you did not request this, please ignore this email.</p>
+    `;
+    await sendEmail(to, subject, text, html);
+  },
+};
