@@ -7,4 +7,5 @@ export type Event = {
     type: string,
     creator_id: number,
     active: boolean;
+    notifications_sent: Record<string, boolean>;
 }
