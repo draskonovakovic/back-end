@@ -4,9 +4,9 @@ import { Event } from '../models/event';
 const API_URL = process.env.API_URL || 'http://localhost:5000';
 
 export class emailService {
-  static async sendInvitationEmail(to: string, event: Event, invitationId: number, loggedInUserId: number) {
-    const acceptLink = `${API_URL}/api/invitations/${invitationId}/${loggedInUserId}/accept`;
-    const declineLink = `${API_URL}/api/invitations/${invitationId}/decline`;
+  static async sendInvitationEmail(to: string, event: Event, token: string) {
+    const acceptLink = `${API_URL}/api/invitations/accept?token=${token}`;
+    const declineLink = `${API_URL}/api/invitations/decline?token=${token}`;
 
     const subject = `You're Invited: ${event.title}`;
     const text = `You have been invited to "${event.title}". Click the link to accept: ${acceptLink} or decline: ${declineLink}`;
@@ -20,11 +20,11 @@ export class emailService {
     `;
 
     try {
-      await sendEmail(to, subject, text, html);
-      console.log(`Invitation email successfully sent to ${to} for event: ${event.title}`);
+        await sendEmail(to, subject, text, html);
+        console.log(`Invitation email successfully sent to ${to} for event: ${event.title}`);
     } catch (error) {
-      console.error('Error sending invitation email:', error);
-      throw new Error('Failed to send invitation email. Please try again later.');
+        console.error('Error sending invitation email:', error);
+        throw new Error('Failed to send invitation email. Please try again later.');
     }
   }
 }

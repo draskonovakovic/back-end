@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 
 const SECRET_KEY = process.env.SECRET_KEY || 'default_secret';
+const INVITATION_SECRET_KEY = process.env.INVITATION_SECRET_KEY || 'default_invitaion_secret'
 
 export const jwtUtils = {
   generateToken(payload: object): string {
@@ -18,5 +19,21 @@ export const jwtUtils = {
       return parts[1];
     }
     return null;
+  },
+
+  generateInvitationToken(invitationId: number, userId: number): string {
+    return jwt.sign(
+        { invitationId, userId },
+        INVITATION_SECRET_KEY,
+        { expiresIn: '1h' } 
+    );
+  },
+
+  verifyInvitationToken(token: string): { invitationId: number, userId: number } {
+    try {
+        return jwt.verify(token, INVITATION_SECRET_KEY) as { invitationId: number, userId: number };
+    } catch (error) {
+        throw new Error('Invalid or expired token');
+    }
   }
 };

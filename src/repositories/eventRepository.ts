@@ -60,7 +60,6 @@ export const eventRepository = {
       if (date && isNaN(Date.parse(date))) {
         throw createError('Invalid date format provided in filters', 400);
       }
-  
       if (type && !VALID_EVENT_TYPES.includes(type)) {
         throw createError(
           `Invalid event type provided. Valid types are: ${VALID_EVENT_TYPES.join(', ')}`,
@@ -68,57 +67,60 @@ export const eventRepository = {
         );
       }
   
-      const baseQuery = `
-        SELECT id, title, description, date_time, location, creator_id, type, active
-        FROM events
-      `;
-      const conditions: string[] = [];
-      const params: (string | boolean)[] = [];
-  
       if (date) {
-        conditions.push(`DATE(date_time) = $${params.length + 1}`);
-        params.push(date);
+        const query = `
+          SELECT id, title, description, date_time, location, creator_id, type, active
+          FROM events
+          WHERE DATE(date_time) = $1
+          ORDER BY date_time DESC
+        `;
+        const result = await db.query(query, [date]);
+        return this.validateQueryResult(result);
       }
   
       if (type) {
-        conditions.push(`type = $${params.length + 1}`);
-        params.push(type);
+        const query = `
+          SELECT id, title, description, date_time, location, creator_id, type, active
+          FROM events
+          WHERE type = $1
+          ORDER BY date_time DESC
+        `;
+        const result = await db.query(query, [type]);
+        return this.validateQueryResult(result);
       }
   
       if (active) {
-        conditions.push(`active = CASE 
-            WHEN $${params.length + 1} IN ('true', 'false') THEN $${params.length + 1}::BOOLEAN
+        const query = `
+          SELECT id, title, description, date_time, location, creator_id, type, active
+          FROM events
+          WHERE active = CASE 
+            WHEN $1 IN ('true', 'false') THEN $1::BOOLEAN
             ELSE NULL
-          END`);
-        params.push(active);
+          END
+          ORDER BY date_time DESC
+        `;
+        const result = await db.query(query, [active]);
+        return this.validateQueryResult(result);
       }
   
       if (search) {
-        conditions.push(
-          `(title ILIKE $${params.length + 1} OR description ILIKE $${params.length + 1} OR location ILIKE $${params.length + 1})`
-        );
-        params.push(`%${search}%`);
+        const query = `
+          SELECT id, title, description, date_time, location, creator_id, type, active
+          FROM events
+          WHERE title ILIKE $1 OR description ILIKE $1 OR location ILIKE $1
+          ORDER BY date_time DESC
+        `;
+        const result = await db.query(query, [`%${search}%`]);
+        return this.validateQueryResult(result);
       }
   
-      const whereClause = conditions.length > 0 ? ` WHERE ${conditions.join(' AND ')}` : '';
-      const orderClause = ` ORDER BY date_time DESC`;
-      const finalQuery = `${baseQuery}${whereClause}${orderClause}`;
-  
-      const result = await db.query(finalQuery, params);
-  
-      if (!result) {
-        throw createError('Query execution failed. No result returned.', 500);
-      }
-  
-      if (!Array.isArray(result.rows)) {
-        throw createError('Unexpected result format. Expected an array of rows.', 500);
-      }
-  
-      if (result.rowCount === 0) {
-        throw createError('No events found matching the provided filters.', 404);
-      }
-  
-      return result.rows;
+      const query = `
+        SELECT id, title, description, date_time, location, creator_id, type, active
+        FROM events
+        ORDER BY date_time DESC
+      `;
+      const result = await db.query(query);
+      return this.validateQueryResult(result);
     } catch (error: any) {
       console.error('Error fetching filtered events:', error);
       throw createError(
@@ -126,5 +128,21 @@ export const eventRepository = {
         error.statusCode || 500
       );
     }
-  }
+  },
+  
+  validateQueryResult(result: any): Event[] {
+    if (!result) {
+      throw createError('Query execution failed. No result returned.', 500);
+    }
+  
+    if (!Array.isArray(result.rows)) {
+      throw createError('Unexpected result format. Expected an array of rows.', 500);
+    }
+  
+    if (result.rowCount === 0) {
+      throw createError('No events found matching the provided filters.', 404);
+    }
+  
+    return result.rows;
+  }  
 };

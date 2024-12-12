@@ -4,25 +4,29 @@ import { userRepository } from '../repositories/userRepository';
 import { Invitation } from '../models/invitation';
 import { createError } from '../utilis/createError';
 import { emailService } from './emailService';
+import { jwtUtils } from '../utilis/jwtUtilis';
 
 export const invitationService = {
-  async createInvitation(invitation: Omit<Invitation, 'id'>, loggedInUserId: number): Promise<Invitation> {
+  async createInvitation(invitation: Omit<Invitation, 'id'>): Promise<{ invitation: Invitation; token: string }> {
     try {
-      const createdInvitation = await invitationRepository.create(invitation)
-      if(!createdInvitation) throw createError('Failed to create invitation, repository returned null or undefined', 500);
+        const createdInvitation = await invitationRepository.create(invitation);
+        if (!createdInvitation) throw createError('Failed to create invitation, repository returned null or undefined', 500);
 
-      const event = await eventRepository.findById(createdInvitation.event_id);
-      const user = await userRepository.findById(createdInvitation.user_id);
+        const event = await eventRepository.findById(createdInvitation.event_id);
+        const user = await userRepository.findById(createdInvitation.user_id);
 
-      if (!event || !user) {
-        throw new Error('Event or user not found.');
-      }
+        if (!event || !user) {
+            throw new Error('Event or user not found.');
+        }
 
-      await emailService.sendInvitationEmail(user.email, event, createdInvitation.id, loggedInUserId);
-      return createdInvitation;
+        const token = jwtUtils.generateInvitationToken(createdInvitation.id, createdInvitation.user_id);
+
+        await emailService.sendInvitationEmail(user.email, event, token);
+
+        return { invitation: createdInvitation, token };
     } catch (error: any) {
-      console.error('Error creating invite:', error);
-      throw createError(`Failed to create invite: ${error}`, error.statusCode || 500);
+        console.error('Error creating invite:', error);
+        throw createError(`Failed to create invite: ${error}`, error.statusCode || 500);
     }
   },
 
@@ -80,8 +84,6 @@ export const invitationService = {
   async acceptInvitation(id: number): Promise<Invitation> {
     try {
       const invitation = await invitationRepository.findById(id);
-      console.log("Invitation id: ", id)
-      console.log("Invitation: ", invitation)
       if (!invitation) {
         throw createError('Invitation not found', 404);
       }
@@ -106,7 +108,6 @@ export const invitationService = {
   async declineInvitation(id: number): Promise<Invitation> {
     try {
       const invitation = await invitationRepository.findById(id);
-
       if (!invitation) {
         throw createError('Invitation not found', 404);
       }
