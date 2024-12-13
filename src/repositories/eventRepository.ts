@@ -22,7 +22,7 @@ export const eventRepository = {
       return result.rows;
     } catch (error: any) {
       const errorMessage = error?.message || 'Unknown error occurred while retrieving the record';
-      throw createError(`Error finding record by creator id in table "events": ${errorMessage}`, 500);
+      throw createError(`Error finding record by creator id in table "events": ${errorMessage}`, 404);
     }
   },
 
