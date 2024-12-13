@@ -38,6 +38,7 @@ export const eventController = {
         }
     
         const event = await eventService.updateEvent(eventId, req.body);
+        io.emit('updatedEvent', event);
         res.status(200).json({ success: true, data: event });
     }),
     
