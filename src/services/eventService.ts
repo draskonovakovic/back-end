@@ -131,7 +131,7 @@ export const eventService = {
       const events = await eventRepository.getFilteredEvents(filters);
   
       if (!events || events.length === 0) {
-        throw createError('No events found matching the provided filters', 404);
+        return []
       }
   
       return events;

@@ -67,6 +67,133 @@ export const eventRepository = {
     }
   }, 
   
+  generateEventQuery(filters: {
+    date?: string;
+    type?: string;
+    active?: string;
+    search?: string;
+  }): { query: string; params: any[] } {
+    const { date, type, active, search } = filters;
+  
+    if (date && !type && !active) {
+      return {
+        query: `
+          SELECT id, title, description, date_time, location, creator_id, type, active
+          FROM events
+          WHERE DATE(date_time) = $1
+          ${search ? `AND (title ILIKE $2 OR description ILIKE $2 OR location ILIKE $2)` : ''}
+          ORDER BY date_time DESC
+        `,
+        params: search ? [date, `%${search}%`] : [date],
+      };
+    }
+  
+    if (type && !date && !active) {
+      return {
+        query: `
+          SELECT id, title, description, date_time, location, creator_id, type, active
+          FROM events
+          WHERE type = $1
+          ${search ? `AND (title ILIKE $2 OR description ILIKE $2 OR location ILIKE $2)` : ''}
+          ORDER BY date_time DESC
+        `,
+        params: search ? [type, `%${search}%`] : [type],
+      };
+    }
+  
+    if (!type && !date && active) {
+      return {
+        query: `
+          SELECT id, title, description, date_time, location, creator_id, type, active
+          FROM events
+          WHERE active = CASE 
+            WHEN $1 IN ('true', 'false') THEN $1::BOOLEAN
+            ELSE NULL
+          END
+          ${search ? `AND (title ILIKE $2 OR description ILIKE $2 OR location ILIKE $2)` : ''}
+          ORDER BY date_time DESC
+        `,
+        params: search ? [active, `%${search}%`] : [active],
+      };
+    }
+  
+    if (!type && date && active) {
+      return {
+        query: `
+          SELECT id, title, description, date_time, location, creator_id, type, active
+          FROM events
+          WHERE DATE(date_time) = $1
+          AND active = CASE 
+            WHEN $2 IN ('true', 'false') THEN $2::BOOLEAN
+            ELSE NULL
+          END
+          ${search ? `AND (title ILIKE $3 OR description ILIKE $3 OR location ILIKE $3)` : ''}
+          ORDER BY date_time DESC
+        `,
+        params: search ? [date, active, `%${search}%`] : [date, active],
+      };
+    }
+  
+    if (type && !date && active) {
+      return {
+        query: `
+          SELECT id, title, description, date_time, location, creator_id, type, active
+          FROM events
+          WHERE type = $1
+          AND active = CASE 
+            WHEN $2 IN ('true', 'false') THEN $2::BOOLEAN
+            ELSE NULL
+          END
+          ${search ? `AND (title ILIKE $3 OR description ILIKE $3 OR location ILIKE $3)` : ''}
+          ORDER BY date_time DESC
+        `,
+        params: search ? [type, active, `%${search}%`] : [type, active],
+      };
+    }
+  
+    if (type && date && !active) {
+      return {
+        query: `
+          SELECT id, title, description, date_time, location, creator_id, type, active
+          FROM events
+          WHERE type = $1
+          AND DATE(date_time) = $2
+          ${search ? `AND (title ILIKE $3 OR description ILIKE $3 OR location ILIKE $3)` : ''}
+          ORDER BY date_time DESC
+        `,
+        params: search ? [type, date, `%${search}%`] : [type, date],
+      };
+    }
+  
+    if (type && date && active) {
+      return {
+        query: `
+          SELECT id, title, description, date_time, location, creator_id, type, active
+          FROM events
+          WHERE type = $1
+          AND DATE(date_time) = $2
+          AND active = CASE 
+            WHEN $3 IN ('true', 'false') THEN $3::BOOLEAN
+            ELSE NULL
+          END
+          ${search ? `AND (title ILIKE $4 OR description ILIKE $4 OR location ILIKE $4)` : ''}
+          ORDER BY date_time DESC
+        `,
+        params: search ? [type, date, active, `%${search}%`] : [type, date, active],
+      };
+    }
+  
+    return {
+      query: `
+        SELECT id, title, description, date_time, location, creator_id, type, active
+        FROM events
+        ${search ? `WHERE (title ILIKE $1 OR description ILIKE $1 OR location ILIKE $1)` : ''}
+        ORDER BY date_time DESC
+      `,
+      params: search ? [`%${search}%`] : [],
+    };
+  },  
+
   async getFilteredEvents(filters: {
     date?: string;
     type?: string;
@@ -74,70 +201,22 @@ export const eventRepository = {
     search?: string;
   }): Promise<Event[]> {
     try {
-      const { date, type, active, search } = filters;
-  
+      const { date, type } = filters;
+
       if (date && isNaN(Date.parse(date))) {
         throw createError('Invalid date format provided in filters', 400);
       }
-  
       if (type && !VALID_EVENT_TYPES.includes(type)) {
         throw createError(
           `Invalid event type provided. Valid types are: ${VALID_EVENT_TYPES.join(', ')}`,
           400
         );
       }
-  
-      let query = `
-        SELECT id, title, description, date_time, location, creator_id, type, active
-        FROM events
-      `;
-      const params: (string | boolean)[] = [];
-      const conditions: string[] = []; 
-  
-      if (date) {
-        conditions.push(`DATE(date_time) = $${params.length + 1}`);
-        params.push(date);
-      }
-  
-      if (type) {
-        conditions.push(`type = $${params.length + 1}`);
-        params.push(type);
-      }
-  
-      if (active) {
-        conditions.push(`active = CASE 
-            WHEN $${params.length + 1} IN ('true', 'false') THEN $${params.length + 1}::BOOLEAN
-            ELSE NULL
-          END`);
-        params.push(active);
-      }
-  
-      if (search) {
-        conditions.push(`(title ILIKE $${params.length + 1} OR description ILIKE $${params.length + 1} OR location ILIKE $${params.length + 1})`);
-        params.push(`%${search}%`);
-      }
-  
-      if (conditions.length > 0) {
-        query += ` WHERE ${conditions.join(' AND ')}`;
-      }
-  
-      query += ` ORDER BY date_time DESC`;
-  
+
+      const { query, params } = this.generateEventQuery(filters);
       const result = await db.query(query, params);
-  
-      if (!result) {
-        throw createError('Query execution failed. No result returned.', 500);
-      }
-  
-      if (!Array.isArray(result.rows)) {
-        throw createError('Unexpected result format. Expected an array of rows.', 500);
-      }
-  
-      if (result.rowCount === 0) {
-        throw createError('No events found matching the provided filters.', 404);
-      }
-  
-      return result.rows;
+
+      return this.validateQueryResult(result);
     } catch (error: any) {
       console.error('Error fetching filtered events:', error);
       throw createError(
@@ -145,6 +224,17 @@ export const eventRepository = {
         error.statusCode || 500
       );
     }
-  }
+  },
     
+  validateQueryResult(result: any): Event[] {
+    if (!result) {
+      throw createError('Query execution failed. No result returned.', 500);
+    }
+  
+    if (!Array.isArray(result.rows)) {
+      throw createError('Unexpected result format. Expected an array of rows.', 500);
+    }
+  
+    return result.rows;
+  },
 };
