@@ -78,7 +78,7 @@ export const invitationController = {
             return res.status(400).json({ success: false, message: 'Invalid or expired token' });
         }
     
-        const invitation = await invitationService.acceptInvitation(decodedToken.invitationId);
+        const invitation = await invitationService.declineInvitation(decodedToken.invitationId);
         return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}?invitationDeclined=true&eventId=${invitation.event_id}`);
     }),
 };
