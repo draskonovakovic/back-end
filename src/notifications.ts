@@ -17,20 +17,20 @@ export const handleEventNotifications = (io: any) => {
     notificationsSent: Record<string, boolean | undefined>
   ) => {
     const notificationRules = [
-      { threshold: 48, key: '2_days', message: 'starts in 2 days' },
-      { threshold: 24, key: '1_day', message: 'starts in 1 day' },
-      { threshold: 5, key: '5_hours', message: 'starts in less than 5 hours' },
       { threshold: 1, key: '1_hour', message: 'starts in less than an hour' },
+      { threshold: 5, key: '5_hours', message: 'starts in less than 5 hours' },
+      { threshold: 24, key: '1_day', message: 'starts in 1 day' },
+      { threshold: 48, key: '2_days', message: 'starts in 2 days' },
     ];
-
+  
     for (const { threshold, key, message } of notificationRules) {
       if (timeDiffHours <= threshold && !notificationsSent[key]) {
         return { key, message };
       }
     }
-
+  
     return null;
-  };
+  };  
 
   const sendNotifications = async () => {
     const now = new Date();

@@ -51,15 +51,10 @@ export const invitationController = {
     acceptInvitation: wrapAsync(async (req: Request, res: Response) => {
         const token = req.query.token as string;
         if (!token) {
-            return res.status(400).json({ success: false, message: 'Token is required' });
+            return res.status(401).json({ success: false, message: 'Token is required' });
         }
     
-        let decodedToken;
-        try {
-            decodedToken = jwtUtils.verifyInvitationToken(token);
-        } catch (error) {
-            return res.status(400).json({ success: false, message: 'Invalid or expired token' });
-        }
+        const decodedToken = jwtUtils.verifyInvitationToken(token);
     
         const invitation = await invitationService.acceptInvitation(decodedToken.invitationId);
         return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}?invitationAccepted=true&eventId=${invitation.event_id}`);
@@ -68,15 +63,10 @@ export const invitationController = {
     declineInvitation: wrapAsync(async (req: Request, res: Response) => {
         const token = req.query.token as string;
         if (!token) {
-            return res.status(400).json({ success: false, message: 'Token is required' });
+            return res.status(401).json({ success: false, message: 'Token is required' });
         }
     
-        let decodedToken;
-        try {
-            decodedToken = jwtUtils.verifyInvitationToken(token);
-        } catch (error) {
-            return res.status(400).json({ success: false, message: 'Invalid or expired token' });
-        }
+        const decodedToken = jwtUtils.verifyInvitationToken(token);
     
         const invitation = await invitationService.declineInvitation(decodedToken.invitationId);
         return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}?invitationDeclined=true&eventId=${invitation.event_id}`);

@@ -15,8 +15,12 @@ export const invitationService = {
         const event = await eventRepository.findById(createdInvitation.event_id);
         const user = await userRepository.findById(createdInvitation.user_id);
 
-        if (!event || !user) {
-            throw new Error('Event or user not found.');
+        if (!event) {
+          throw new Error('Event not found.');
+        }
+
+        if(!user){
+          throw new Error('User not found')
         }
 
         const token = jwtUtils.generateInvitationToken(createdInvitation.id, createdInvitation.user_id);

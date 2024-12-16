@@ -11,13 +11,6 @@ export const userRepository = {
       const query = `SELECT * FROM users WHERE email = $1`;
       const result = await db.query(query, [email]);
 
-      if (!result || result.rows.length === 0) {
-        throw createError(
-          `Failed to find record by email ${email} in table "users". The database query returned no result.`,
-          404
-        );
-      }
-
       return result.rows[0];
     } catch (error: any) {
       const errorMessage = error?.message || 'Unknown error occurred while retrieving the record';

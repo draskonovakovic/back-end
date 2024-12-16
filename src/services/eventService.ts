@@ -59,6 +59,7 @@ export const eventService = {
 
   async updateEvent(id: number, event: Partial<Event>): Promise<Event> {
     try {
+      event.notifications_sent = {};
       const updatedEvent = await eventRepository.update(id, event);
       if (!updatedEvent) {
         throw createError('Event not found', 404);

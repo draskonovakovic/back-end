@@ -6,7 +6,9 @@ import { io } from '../server';
 export const eventController = {
     createEvent: wrapAsync(async (req: Request , res: Response) => {
         const creatorId = req.user?.id; 
-        if (!creatorId) throw new Error('User ID not found in request');
+        if (!creatorId) {
+            throw new Error('User ID not found in request');
+        } 
 
         const event = await eventService.createEvent(req.body, creatorId);
         io.emit('newEvent', event);
@@ -85,8 +87,10 @@ export const eventController = {
         const eventId = Number(req.params.id);
         const creatorId = req.user?.id; 
 
-        if (!creatorId) throw new Error('User ID not found in request');
-    
+        if (!creatorId) {
+            throw new Error('User ID not found in request');
+        }
+
         if (!eventId || isNaN(eventId)) {
             return res.status(400).json({ success: false, message: 'Invalid event ID' });
         }
@@ -98,7 +102,9 @@ export const eventController = {
     getEventStatistic: wrapAsync(async (req: Request, res: Response) => {
         const userId = req.user?.id; 
 
-        if (!userId) throw new Error('User ID not found in request');
+        if (!userId) {
+          throw new Error('User ID not found in request');
+        } 
 
         const eventsWithStats = await eventService.getEventsWithStatistic(userId);
         res.status(200).json({ success: true, data: eventsWithStats});
