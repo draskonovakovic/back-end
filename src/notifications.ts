@@ -1,70 +1,85 @@
-import cron from 'node-cron';
 import db from './config/db';
+import { createError } from './utilis/createError';
 
 export const handleEventNotifications = (io: any) => {
-  const sendNotifications = async () => {
-    const now = new Date();
-    const result = await db.query(`
-        SELECT id, title, date_time, notifications_sent
-        FROM events
-        WHERE date_time > NOW() - INTERVAL '2 days' 
-    `);
-
-    const events = result.rows;
-
-    const formatDate = (date: Date): string => {
-      return new Intl.DateTimeFormat('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      }).format(date);
-    };
-
-    for (const event of events) {
-        const eventTime = new Date(event.date_time);
-        const timeDiffMs = eventTime.getTime() - now.getTime();
-        const timeDiffHours = timeDiffMs / (1000 * 60 * 60); 
-        const notificationsSent = event.notifications_sent || {};
-
-        let message: string | null = null;
-        let key: string | null = null;
-
-        if (timeDiffHours <= 48 && timeDiffHours > 24 && !notificationsSent['2_days']) {
-            message = `Event "${event.title}" starts in 2 days at ${formatDate(eventTime)}.`;
-            key = '2_days';
-        } else if (timeDiffHours <= 24 && timeDiffHours > 5 && !notificationsSent['1_day']) {
-            message = `Event "${event.title}" starts in 1 day at ${formatDate(eventTime)}.`;
-            key = '1_day';
-        } else if (timeDiffHours <= 5 && timeDiffHours > 1 && !notificationsSent['5_hours']) {
-            message = `Event "${event.title}" starts in less than 5 hours at ${formatDate(eventTime)}.`;
-            key = '5_hours';
-        } else if (timeDiffHours <= 1 && timeDiffHours > 0 && !notificationsSent['1_hour']) {
-            message = `Event "${event.title}" starts in less than an hour at ${formatDate(eventTime)}.`;
-            key = '1_hour';
-        } 
-        
-        if (message && key) {
-            io.emit('event-reminder', { message, event });
-
-            await db.query(`
-                UPDATE events
-                SET notifications_sent = jsonb_set(
-                    COALESCE(notifications_sent, '{}'),
-                    '{${key}}',
-                    'true'
-                )
-                WHERE id = $1
-            `, [event.id]);
-        }
-    }
+  const formatDate = (date: Date): string => {
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date);
   };
 
-  cron.schedule('*/1 * * * *', () => {
-    console.log('Checking for upcoming event notifications...');
-    sendNotifications().catch((err) => {
-      console.error('Error while sending event notifications:', err);
-    });
-  });
+  const sendNotifications = async () => {
+    const now = new Date();
+  
+    try {
+      const result = await db.query(`
+        SELECT id, title, date_time, notifications_sent
+        FROM events
+        WHERE date_time > NOW() - INTERVAL '2 days'
+      `);
+  
+      if (!result.rows) {
+        throw createError('No events found.', 404);
+      }
+  
+      const events = result.rows;
+  
+      for (const event of events) {
+        try {
+          const eventTime = new Date(event.date_time);
+          const timeDiffHours =
+            (eventTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+          let notificationsSent = event.notifications_sent || {};
+  
+          const notificationRules = [
+            { threshold: 1, key: '1_hour', message: 'starts in less than an hour' },
+            { threshold: 5, key: '5_hours', message: 'starts in less than 5 hours' },
+            { threshold: 24, key: '1_day', message: 'starts in 1 day' },
+            { threshold: 48, key: '2_days', message: 'starts in 2 days' },
+          ];
+  
+          const closestNotification = notificationRules.find(
+            ({ threshold, key }) => timeDiffHours <= threshold && !notificationsSent[key]
+          );
+  
+          if (closestNotification) {
+            const { key, message } = closestNotification;
+  
+            const formattedMessage = `Event "${event.title}" ${message} at ${formatDate(
+              eventTime
+            )}.`;
+  
+            io.emit('event-reminder', { message: formattedMessage, event });
+  
+            const updatedNotifications = { ...notificationsSent };
+            for (const { threshold, key: ruleKey } of notificationRules) {
+              if (threshold >= closestNotification.threshold) {
+                updatedNotifications[ruleKey] = true;
+              }
+            }
+  
+            await db.query(
+              `
+                UPDATE events
+                SET notifications_sent = $1
+                WHERE id = $2
+              `,
+              [updatedNotifications, event.id]
+            );
+          }
+        } catch (error: any) {
+          console.error('Error processing event:', error.message);
+        }
+      }
+    } catch (error: any) {
+      console.error('Failed to send notifications.', error.message);
+    }
+  };
+    
+
+  return sendNotifications; 
 };

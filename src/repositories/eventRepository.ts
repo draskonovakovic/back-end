@@ -7,6 +7,25 @@ import { VALID_EVENT_TYPES } from '../config/eventTypes';
 export const eventRepository = {
   ...baseRepository<Event>('events'),
 
+  async findEventsByCreatorId(creatorId: number): Promise<Event[]> {
+    try {
+      const query = `SELECT * FROM events WHERE creator_id = $1`;
+      const result = await db.query(query, [creatorId]);
+
+      if (!result || result.rows.length === 0) {
+        throw createError(
+          `Failed to find record by creator id ${creatorId} in table "events". The database query returned no result.`,
+          404
+        );
+      }
+
+      return result.rows;
+    } catch (error: any) {
+      const errorMessage = error?.message || 'Unknown error occurred while retrieving the record';
+      throw createError(`Error finding record by creator id in table "events": ${errorMessage}`, 404);
+    }
+  },
+
   async cancelEvent(id: number): Promise<number> {
     try {
       const query = `
@@ -217,5 +236,5 @@ export const eventRepository = {
     }
   
     return result.rows;
-  },  
+  },
 };

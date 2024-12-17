@@ -16,6 +16,8 @@ router.route('/:id')
   .put(eventValidationMiddleware, authenticateToken, eventController.updateEvent)
   .delete(authenticateToken, eventController.deleteEvent);
 
-router.route('/cancel/:id').put(eventController.cancelEvent)
+router.route('/cancel/:id').put(authenticateToken, eventController.cancelEvent)
+router.route('/check/:id').get(authenticateToken, eventController.isUsersEvent)
+router.get("/dashboard/attendance", authenticateToken, eventController.getEventStatistic);
 
 export default router;
