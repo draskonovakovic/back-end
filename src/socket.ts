@@ -2,11 +2,18 @@ import { Server as SocketIOServer } from 'socket.io';
 import { jwtUtils } from './utilis/jwtUtilis';
 import { handleEventNotifications } from './notifications';
 import { scheduleEventNotifications } from './utilis/cronJobs';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const envFile = process.env.NODE_ENV === 'docker' ? '.env.docker' : '.env.local';
+dotenv.config({ path: envFile });
+const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:3000').split(',');
 
 export const initializeSocketIO = (server: any) => {
   const io = new SocketIOServer(server, {
     cors: {
-      origin: process.env.CLIENT_URL || 'http://localhost:3000',
+      origin: allowedOrigins,
       methods: ['GET', 'POST'],
       credentials: true,
     },
