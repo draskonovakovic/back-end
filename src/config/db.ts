@@ -3,6 +3,9 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+const envFile = process.env.NODE_ENV === 'docker' ? '.env.docker' : '.env.local';
+dotenv.config({ path: envFile });
+
 const pool = new Pool({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
